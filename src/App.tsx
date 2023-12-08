@@ -1,9 +1,10 @@
-import ReactionTime from "./ReactionTimer"
+import {ReactionTime } from "./ReactionTimer"
 
 function App() {
-
   return (
-    <ReactionTime />
+    <ReactionTime className = 'flex flex-col items-center w-full h-full' >
+      test
+      </ReactionTime>
   )
 }
 
