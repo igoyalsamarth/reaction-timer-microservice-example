@@ -1,10 +1,13 @@
-import {ReactionTime } from "./ReactionTimer"
+import { ReactionTime } from "./ReactionTimer";
+import { useState } from "react";
 
 function App() {
+  const [reactionTime, setReactionTime] = useState<number>(0);
+
   return (
-    <ReactionTime className = 'flex flex-col items-center w-full h-full' >
-      test
-      </ReactionTime>
+    <ReactionTime className='flex flex-col items-center w-full h-96' onReactionTimeChange={setReactionTime} instructionsClassName="text-2xl">
+      <p className="text-2xl font-black">{reactionTime}</p>
+    </ReactionTime>
   )
 }
 
