@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 
-interface TimerProps {
+export interface TimerProps {
     waitTime?: number;
     children?: ReactNode;
     className?: string;
