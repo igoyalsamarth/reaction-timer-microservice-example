@@ -1,8 +1,7 @@
-import { Line } from "@nivo/line";
 import { ReactNode, useState } from "react";
 import { useEffect } from "react";
 import dayjs from "dayjs";
-
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ReferenceLine, ResponsiveContainer } from "recharts";
 
 export interface TimerProps {
     waitTime?: number;
@@ -10,13 +9,14 @@ export interface TimerProps {
     className?: string;
     needInstruction?: boolean;
     instructionsClassName?: string
-    onReactionTimeChange: React.Dispatch<React.SetStateAction<number>>
+    onReactionTimeChange: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export interface AnalyticsProps {
-    onReactionTimeChange: React.Dispatch<React.SetStateAction<number>>
-    height:number
-    width:number
+    onReactionTimeChange: React.Dispatch<React.SetStateAction<number>>;
+    height?: number;
+    width?: number;
+    className?: string;
 }
 
 export interface SingleAttempt {
@@ -25,7 +25,6 @@ export interface SingleAttempt {
 }
 
 export interface Database {
-    latestAttempt: SingleAttempt;
     listOfAttempts: Array<SingleAttempt>;
     bestAttempts: Array<SingleAttempt>;
     averageOfAllAttemps: number;
@@ -35,7 +34,6 @@ export function ReactionTime(props: TimerProps): JSX.Element {
     const [databaseState, setDatabaseState] = useState<Database>(() => {
         const value = localStorage.getItem('rt_database'); return value !== null ? JSON.parse(value) :
             {
-                latestAttempt: {},
                 listOfAttempts: [],
                 bestAttempts: [],
                 averageOfAllAttemps: 0
@@ -64,20 +62,26 @@ export function ReactionTime(props: TimerProps): JSX.Element {
             props.onReactionTimeChange((Date.now() - startTime))
             setInstruction('Nice Job!')
             if (localReactionTime > 0) {
-                setDatabaseState({
-                    latestAttempt: { reactionTime: localReactionTime, testTime: Date.now() },
-                    listOfAttempts: [...databaseState.listOfAttempts, { reactionTime: localReactionTime, testTime: Date.now() }],
-                    averageOfAllAttemps: databaseState.listOfAttempts.map(Item => Item.reactionTime).reduce(function (avg, value, _, { length }) {
-                        return avg + value / length;
-                    }, 0),
-                    bestAttempts: [...databaseState.bestAttempts]
-                })
-                localReactionTime < Math.min(...databaseState.bestAttempts.map(Item => Item.reactionTime)) ?
+
+                if (localReactionTime < Math.min(...databaseState.bestAttempts.map(Item => Item.reactionTime))) {
                     setDatabaseState(
                         {
-                            ...databaseState,
+                            listOfAttempts: [...databaseState.listOfAttempts, { reactionTime: localReactionTime, testTime: Date.now() }],
+                            averageOfAllAttemps: databaseState.listOfAttempts.map(Item => Item.reactionTime).reduce(function (avg, value, _, { length }) {
+                                return avg + value / length;
+                            }, 0),
                             bestAttempts: [...databaseState.bestAttempts, { reactionTime: localReactionTime, testTime: Date.now() }]
-                        }) : null
+                        })
+                } else if (databaseState.bestAttempts[databaseState.bestAttempts.length - 1].reactionTime !== undefined) {
+                    setDatabaseState(
+                        {
+                            listOfAttempts: [...databaseState.listOfAttempts, { reactionTime: localReactionTime, testTime: Date.now() }],
+                            averageOfAllAttemps: databaseState.listOfAttempts.map(Item => Item.reactionTime).reduce(function (avg, value, _, { length }) {
+                                return avg + value / length;
+                            }, 0),
+                            bestAttempts: [...databaseState.bestAttempts, { reactionTime: databaseState.bestAttempts[databaseState.bestAttempts.length - 1].reactionTime, testTime: Date.now() }]
+                        })
+                }
             }
             setReactionState(0)
         }
@@ -90,7 +94,6 @@ export function ReactionTime(props: TimerProps): JSX.Element {
     return (
         <div className={`${props.className} ${reactionState === 0 || reactionState === 4 ? 'bg-cyan-500' : reactionState === 1 ? 'bg-red-500' : 'bg-green-500'}`} onClick={() => handleReactionState()}>
             <p className={props.instructionsClassName}>{instruction}</p>
-            {localReactionTime}
             {props.children}
         </div>
     );
@@ -118,47 +121,21 @@ export function Analytics(props: AnalyticsProps) {
                 }
         })
     }, [props.onReactionTimeChange]);
-    console.log(reactionData)
+
     return (
-        <div className="flex w-[100vw]">
-            <Line
-            
-                data={[
-                    {
-                        color: 'hsl(111, 70%, 50%)',
-                        id: "Reaction Time",
-                        data: reactionData.listOfAttempts.map(Item => {return({y:Item.reactionTime, x:dayjs(Item.testTime).format('hh:mm:ss')})})
-                    },{
-                        id:'Best Results',
-                        data: reactionData.bestAttempts.map(Item => {return({y:Item.reactionTime, x:dayjs(Item.testTime).format('hh:mm:ss')})})
-                    }
-                ]}
-                markers={[
-                    {
-                        axis: 'y',
-                        value: reactionData.averageOfAllAttemps,
-                        legend: 'Average',
-                        lineStyle: {
-                            stroke: 'red',
-                        },
-                        textStyle: {
-                            fill: 'red',
-                        },
-                    },
-                ]}
-                lineWidth={6}
-                crosshairType="cross"
-                curve='linear'
-                enableSlices="x"
-                height={props.height}
-                margin={{
-                    bottom: 60,
-                    left: 80,
-                    right: 20,
-                    top: 20
-                }}
-                width={props.width}
-                        />
+        <div className={props.className}>
+            <ResponsiveContainer width={!props.width ? '100%' : props.width} height={!props.height ? '100%' : props.height}>
+                <LineChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }} data={reactionData.listOfAttempts.map(Item => { return ({ reactioNTime: Item.reactionTime, date: Item.testTime}) })}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis fontSize={10} dataKey="date" tickFormatter={timeStr => dayjs(timeStr).format('YYYY-MM-DD hh:mm:ss')} type="number" domain={['auto','auto']} />
+                    <YAxis fontSize={10} dataKey='reactionTime' />
+                    <Tooltip labelClassName="text-sm font-bold" labelFormatter={(value) => dayjs(value).format('YYYY-MM-DD hh:mm:ss')} />
+                    <Legend />
+                    <Line type="stepAfter" dataKey="bestAttempt" stroke="#8884d8" data={reactionData.bestAttempts.map(Item => { return ({ bestAttempt: Item.reactionTime, date: Item.testTime}) })} />
+                    <Line type="monotone" dataKey="reactionTime" stroke="#000" data={reactionData.listOfAttempts.map(Item => { return ({ reactionTime: Item.reactionTime, date: Item.testTime}) })} />
+                    <ReferenceLine y={reactionData.averageOfAllAttemps} stroke="red" strokeDasharray="3 3" />
+                </LineChart>
+            </ResponsiveContainer>
         </div>
     );
 }

@@ -7,15 +7,15 @@ function App() {
 
   return (
     <>
-    {/*<ReactionTime onReactionTimeChange={setReactionTime}>
+      {/*<ReactionTime onReactionTimeChange={setReactionTime}>
       test
       <p>{reactionTime}</p>
     </ReactionTime>*/}
-    <ReactionTime className='flex flex-col items-center w-full h-96' onReactionTimeChange={setReactionTimeState} instructionsClassName="text-2xl">
-      <p className="text-2xl font-black">{reactionTimeState}</p>
-  </ReactionTime>
-  <Analytics onReactionTimeChange={setReactionTimeState} width={1080} height={1080}/>
-  </>
+      <ReactionTime className='flex flex-col items-center w-full h-96' onReactionTimeChange={setReactionTimeState} instructionsClassName="text-2xl">
+        <p className="text-2xl font-black">{reactionTimeState}</p>
+      </ReactionTime>
+      <Analytics onReactionTimeChange={setReactionTimeState} height={300} className="w-[100vw]" />
+    </>
   )
 }
 
