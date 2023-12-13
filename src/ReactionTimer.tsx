@@ -46,6 +46,7 @@ export function ReactionTime(props: TimerProps): JSX.Element {
     const [timeoutState, setTimeoutState] = useState<NodeJS.Timeout | undefined>(undefined)
 
     const waitTimeInner = !props.waitTime ? 5000 : props.waitTime
+    const needInstructionInner = props.needInstruction === undefined? true : props.needInstruction
 
     const handleReactionState = () => {
         if (reactionState === 0) {
@@ -93,7 +94,7 @@ export function ReactionTime(props: TimerProps): JSX.Element {
 
     return (
         <div className={`${props.className} ${reactionState === 0 || reactionState === 4 ? 'bg-cyan-500' : reactionState === 1 ? 'bg-red-500' : 'bg-green-500'}`} onClick={() => handleReactionState()}>
-            <p className={props.instructionsClassName}>{instruction}</p>
+            {needInstructionInner && <p className={props.instructionsClassName}>{instruction}</p>}
             {props.children}
         </div>
     );
